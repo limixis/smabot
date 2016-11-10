@@ -9,7 +9,7 @@ from collections import Counter
 import argparse
 
 
-TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 KEYS_FILE = 'C:\Users\Natalia\Desktop\smabot-dev\keys.tsv'
 LOG_FILE = 'C:\Users\Natalia\Desktop\smabot-dev\log.tsv'
 
@@ -74,11 +74,11 @@ class Chatter(object):
             message = u'Отличный выбор, спасибо!'
             with open(LOG_FILE, 'a') as f:
                 print >> f, band
+            user_data['mode'] = 'AUTHENTICATION'
         else:
             message = u'Ээ... эта группа сегодня не выступала. Выберите группу из списка.'
         bot.sendMessage(chat_id=update.message.chat_id,
                         text=message)
-        user_data['mode'] = 'AUTHENTICATION'
 
     def send_feedback(self, bot, update):
         pass
