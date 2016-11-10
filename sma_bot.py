@@ -1,3 +1,5 @@
+# -*- coding: UTF-8 -*-
+
 from telegram import ReplyKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import logging
@@ -7,9 +9,9 @@ from collections import Counter
 import argparse
 
 
-TOKEN = 'xxxxxxxxxxxxxxxxxxx'
-KEYS_FILE = 'C:\Users\limixis\Desktop\keys.tsv'
-LOG_FILE = 'C:\Users\limixis\Desktop\log.tsv'
+TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+KEYS_FILE = 'C:\Users\Natalia\Desktop\smabot-dev\keys.tsv'
+LOG_FILE = 'C:\Users\Natalia\Desktop\smabot-dev\log.tsv'
 
 BANDS = ['AC/DC', 'KINO', '4DB', 'The Beatles', 'Zhuki', 'Band 21', 'Band 31', 'Band 51', 'Banda']
 
@@ -24,7 +26,7 @@ ADMIN_NAMES = ['limixis', 'oneunreadmail']
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Generate tokens for authentication")
-    parser.add_argument("-f", dest="key_file", default="./keys.tsv", help="Path to file with keys")
+    parser.add_argument("-f", dest="key_file", default="./smabot-dev/keys.tsv", help="Path to file with keys")
     parser.add_argument("--bands", dest="bands", nargs="*", default=None, help="List of bands")
     parser.add_argument("--admins", dest="admins", nargs="*", default=['limixis', 'oneunreadmail'], help="List of admin usernames")
 
@@ -33,7 +35,7 @@ def parse_args():
 
 def start(bot, update):
     bot.sendMessage(chat_id=update.message.chat_id,
-                    text="I'm a SMA bot, give me your token and vote for a favourite band!")
+                    text=u'Добрый вечер! Я SMA-бот. Пришлите мне свой пароль и голосуйте за любимую группу!')
 
 
 def stats(bot, update):
@@ -46,32 +48,37 @@ def stats(bot, update):
 class Chatter(object):
     def __init__(self):
         self.modes = {'AUTHENTICATION': self.process_token, 'VOTING': self.vote, 'FEEDBACK': self.send_feedback}
-        self.mode = 'AUTHENTICATION'
         self.key_val = Validator(KEYS_FILE)
 
-    def handle_text(self, bot, update):
-        func = self.modes[self.mode]
-        func(bot, update)
+    def handle_text(self, bot, update, user_data):
+        if not user_data.get('mode'):
+            user_data['mode'] = 'AUTHENTICATION'
+        mode = user_data['mode']
+        func = self.modes[mode]
+        func(bot, update, user_data)
 
-    def process_token(self, bot, update):
+    def process_token(self, bot, update, user_data):
         is_correct = self.key_val.validate_keys(update.message.text.strip())
         if is_correct:
-            message = 'Yep, your token is fine, now you can vote!'
+            message = u'Спасибо, теперь можно голосовать!'
             bot.sendMessage(chat_id=update.message.chat_id, text=message, reply_markup=markup)
-            self.mode = 'VOTING'
+            user_data['mode'] = 'VOTING'
         else:
-            message = 'Sorry, I don\'t recognize your token, try again?'
+            message = u'Чтобы проголосовать, нужно ввести свежий пароль'
             bot.sendMessage(chat_id=update.message.chat_id, text=message)
 
-    def vote(self, bot, update):
+    def vote(self, bot, update, user_data):
         band = update.message.text
         if band in BANDS:
             band_stats[band] += 1
+            message = u'Отличный выбор, спасибо!'
             with open(LOG_FILE, 'a') as f:
                 print >> f, band
+        else:
+            message = u'Ээ... эта группа сегодня не выступала. Выберите группу из списка.'
         bot.sendMessage(chat_id=update.message.chat_id,
-                        text='Good choice, thanks!')
-        self.mode = 'AUTHENTICATION'
+                        text=message)
+        user_data['mode'] = 'AUTHENTICATION'
 
     def send_feedback(self, bot, update):
         pass
@@ -95,7 +102,7 @@ if __name__ == "__main__":
     dp.add_handler(stats_handler)
 
     chatter = Chatter()
-    text_handler = MessageHandler(Filters.text, chatter.handle_text)
+    text_handler = MessageHandler(Filters.text, chatter.handle_text, pass_user_data=True)
     dp.add_handler(text_handler)
 
     updater.start_polling()
