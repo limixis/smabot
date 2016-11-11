@@ -10,14 +10,16 @@ import argparse
 
 
 TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-KEYS_FILE = 'C:\Users\Natalia\Desktop\smabot-dev\keys.tsv'
-LOG_FILE = 'C:\Users\Natalia\Desktop\smabot-dev\log.tsv'
+KEYS_FILE = 'C:\Users\limixis\Documents\GitHub\smabot\keys.tsv'
+LOG_FILE = 'C:\Users\limixis\Documents\GitHub\smabot\log.tsv'
 
-BANDS = ['AC/DC', 'KINO', '4DB', 'The Beatles', 'Zhuki', 'Band 21', 'Band 31', 'Band 51', 'Banda']
+BANDS = [u'Авиарежим', u'Полдень на латинском', u'The Last Realism', u'4 Quarters Of A Pizza', u'', u'Всё никак', u'One piece band', u'', 'Banda']
 
 reply_keyboard = [BANDS[i:i + 2] for i in range(0, len(BANDS), 2)]
+confirm_keyboard = [[u'Да', u'Нет']]
 
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True, resize_keyboard=True)
+markup_confirm = ReplyKeyboardMarkup(confirm_keyboard, one_time_keyboard=True, resize_keyboard=True)
 
 band_stats = Counter()
 
@@ -26,7 +28,7 @@ ADMIN_NAMES = ['limixis', 'oneunreadmail']
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Generate tokens for authentication")
-    parser.add_argument("-f", dest="key_file", default="./smabot-dev/keys.tsv", help="Path to file with keys")
+    parser.add_argument("-f", dest="key_file", default="./keys.tsv", help="Path to file with keys")
     parser.add_argument("--bands", dest="bands", nargs="*", default=None, help="List of bands")
     parser.add_argument("--admins", dest="admins", nargs="*", default=['limixis', 'oneunreadmail'], help="List of admin usernames")
 
@@ -47,7 +49,8 @@ def stats(bot, update):
 
 class Chatter(object):
     def __init__(self):
-        self.modes = {'AUTHENTICATION': self.process_token, 'VOTING': self.vote, 'FEEDBACK': self.send_feedback}
+        self.modes = {'AUTHENTICATION': self.process_token, 'VOTING': self.vote, 'FEEDBACK': self.send_feedback,
+                      self.confirm: 'CONFIRMATION'}
         self.key_val = Validator(KEYS_FILE)
 
     def handle_text(self, bot, update, user_data):
@@ -70,15 +73,33 @@ class Chatter(object):
     def vote(self, bot, update, user_data):
         band = update.message.text
         if band in BANDS:
-            band_stats[band] += 1
-            message = u'Отличный выбор, спасибо!'
-            with open(LOG_FILE, 'a') as f:
-                print >> f, band
-            user_data['mode'] = 'AUTHENTICATION'
+            message = u'Вы точно хотите проголосовать за ' + band + u'?'
+            user_data['band'] = band
+            user_data['mode'] = 'CONFIRMATION'
         else:
             message = u'Ээ... эта группа сегодня не выступала. Выберите группу из списка.'
         bot.sendMessage(chat_id=update.message.chat_id,
                         text=message)
+
+    def confirm(self, bot, update, user_data):
+        _markup=None
+        answer = update.message.text.decode('utf-8')
+        if answer.lower() == u'да':
+            band = user_data['band']
+            band_stats[band] += 1
+            with open(LOG_FILE, 'a') as f:
+                print >> f, band.encode('utf-8')
+            message = u'Отличный выбор, спасибо!'
+            user_data['mode'] = 'AUTHENTICATION'
+        elif answer.lower() == u'нет':
+            message = u'Передумали? Тогда проголосуйте заново!'
+            user_data['mode'] = 'VOTING'
+            _markup = markup
+        else:
+            message = u'Не понятно. Давайте еще раз. Вы точно хотите проголосовать за ' + user_data['band'] + u'?'
+            _markup = markup_confirm
+        bot.sendMessage(chat_id=update.message.chat_id,
+                        text=message, reply_markup=_markup)
 
     def send_feedback(self, bot, update):
         pass
