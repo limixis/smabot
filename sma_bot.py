@@ -10,9 +10,14 @@ import argparse
 
 
 TOKEN = ''
+<<<<<<< HEAD
 KEYS_FILE = '/Users/victor/Desktop/Sma16/keys.tsv'
 LOGa
 _FILE = '/Users/victor/Desktop/Sma16/log.tsv'
+=======
+KEYS_FILE = '.../keys.tsv'
+LOG_FILE = '.../log.tsv'
+>>>>>>> dev
 
 BANDS = [u'Авиарежим', u'Полдень на латинском', u'The Last Realism',u'4 Quarters Of A Pizza', u'Всё никак',u'One piece band',u'Age of Despration',u'My Desolation']
 
@@ -25,7 +30,11 @@ markup_confirm = ReplyKeyboardMarkup(confirm_keyboard, one_time_keyboard=True, r
 
 band_stats = Counter()
 
+<<<<<<< HEAD
 ADMIN_NAMES = ['limixis', 'oneunreadmail','Snufkin1514']
+=======
+ADMIN_NAMES = ['limixis', 'oneunreadmail', 'Snufkin1514']
+>>>>>>> dev
 
 
 def parse_args():
@@ -46,8 +55,13 @@ def stats(bot, update):
     telegram_user = update.message.from_user
     if telegram_user.username in ADMIN_NAMES:
         data = ""
+<<<<<<< HEAD
         for i in band_stats.most_common(len(band_stats)):
             data+="{} : {}\n".format(i[0].encode('utf-8'),i[1])
+=======
+        for band, rating in band_stats.most_common(len(band_stats)):
+            data += "{}: {}\n".format(band.encode('utf-8'), rating)
+>>>>>>> dev
         bot.sendMessage(chat_id=update.message.chat_id,
                         text=data)
 
@@ -89,7 +103,11 @@ class Chatter(object):
                         text=message, reply_markup = _markup)
     
     def confirm(self, bot, update, user_data):
+<<<<<<< HEAD
         _markup=None
+=======
+        _markup = None
+>>>>>>> dev
         answer = update.message.text.lower().strip()
         if answer == u'да':
             band = user_data['band']
@@ -101,12 +119,18 @@ class Chatter(object):
         elif answer == u'нет':
             message = u'Передумали? Тогда проголосуйте заново!'
             user_data['mode'] = 'VOTING'
+<<<<<<< HEAD
             _markup = markup              
+=======
+>>>>>>> dev
         else:
             message = u'Не понятно. Давайте еще раз. Вы точно хотите проголосовать за ' + user_data['band'] + u'?'
             _markup = markup_confirm
         bot.sendMessage(chat_id=update.message.chat_id,text=message, reply_markup=_markup)                
+<<<<<<< HEAD
        
+=======
+>>>>>>> dev
 
     def send_feedback(self, bot, update):
         pass
